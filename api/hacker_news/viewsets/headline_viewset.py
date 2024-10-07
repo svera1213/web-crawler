@@ -1,6 +1,8 @@
 from rest_framework import permissions, viewsets, throttling
 from rest_framework.response import Response
 from scrapper.models import Headline
+from api.models.usage_tracker import OrderingTypes
+from ..services import UsageTrackerService
 from ..serializers import HeadlineSerializer
 from ..filters import HeadlineFilterA, HeadlineFilterB
 
@@ -13,9 +15,9 @@ class HeadlineViewSet(viewsets.ReadOnlyModelViewSet):
 
     def filter_queryset(self, queryset):
         ordering_type = self.request.query_params.get("ordering_type", "default")
-        if ordering_type == "A":
+        if ordering_type == OrderingTypes.type_A:
             return HeadlineFilterA().filter_queryset(self.request, queryset, self)
-        elif ordering_type == "B":
+        elif ordering_type == OrderingTypes.type_B:
             return HeadlineFilterB().filter_queryset(self.request, queryset, self)
         else:
             pass
@@ -24,6 +26,7 @@ class HeadlineViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
+        UsageTrackerService(request=request).track_usage()
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
