@@ -1,6 +1,6 @@
 from django.db import models
 
-from ..base_abstract_model import BaseAbstractModel
+from common import BaseAbstractModel
 
 
 class Headline(BaseAbstractModel):
